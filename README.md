@@ -10,7 +10,17 @@ TODO
 - [requests](http://docs.python-requests.org/en/latest/)
 
 ## Example
-TODO
+```python
+import ndb
+
+n = ndb.NDB(YOUR_KEY_HERE)
+tofus = n.search_keyword("tofu")
+tofu = list(tofus['items'])[0]
+print tofu
+
+report = n.food_report(tofu.get_ndbno())
+print report['food'].get_nutrients()[0]
+```
 
 ## Legalese
 Suggested citation:
