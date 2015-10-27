@@ -73,7 +73,7 @@ class NDB(object):
         Searches the database for a food report.
 
         Optional arguments include:
-        - type: report type, [b]asic or [f]ull or [s]tats
+        - type: report type, [b]asic or [f]ull or [s]tats; default is b
 
         Returns a dict with the following keys:
         - food: a FoodReport object
@@ -125,9 +125,11 @@ class SearchResult(object):
         """
         return self._group
 
+    def __str__(self):
+        return self._name
+
     def __repr__(self):
-        return "Result(name=" + self._name + ", " +\
-            "ndbno=" + self._ndbno + ")"
+        return "Result(name={}, ndbno={}".format(self._name, self._ndbno)
 
 
 class FoodReport(object):
@@ -151,6 +153,9 @@ class FoodReport(object):
     def get_nutrients(self):
         return self._nutrients
 
+    def __str__(self):
+        return "{} Report".format(self._name)
+
     def __repr__(self):
         return "FoodReport(name={}, ndbno={}, nutrients={})".format(
             self._name, self._ndbno, self._nutrients)
@@ -162,6 +167,9 @@ class Nutrient(object):
     """
     @staticmethod
     def from_dict(d):
+        measures = [] if d.get('measures', None) is None else \
+            [Measure.from_dict(m) for m in d['measures']]
+
         return Nutrient(nutrient_id=d.get('nutrient_id', ''),
                         name=d.get('name', ''),
                         sourcecode=d.get('sourcecode', ''),
@@ -170,7 +178,7 @@ class Nutrient(object):
                         group=d.get('group', ''),
                         se=d.get('se', ''),
                         dp=d.get('dp', ''),
-                        measures=[Measure.from_dict(m) for m in d['measures']])
+                        measures=measures)
 
     def __init__(self, nutrient_id="", name="", group="", unit="", value="",
                  sourcecode="", dp="", se="", measures=[]):
@@ -212,6 +220,9 @@ class Nutrient(object):
     def measures(self):
         return self._measures
 
+    def __str__(self):
+        return self._name
+
     def __repr__(self):
         return """Nutrient(nutrient_id={}, name={}, sourcecode={}, unit={},
             value={}, measures=<{}>)""".format(
@@ -247,6 +258,9 @@ class Measure(object):
 
     def get_value(self):
         return self._value
+
+    def __str__(self):
+        return self._label()
 
     def __repr__(self):
         return "Measure(label={}, eqv={}, qty={}, value={})".format(
