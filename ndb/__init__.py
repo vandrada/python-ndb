@@ -57,16 +57,48 @@ class NDB(object):
         res = requests.get(self._base_url.format("search"),
                            params=kwargs).json()
         items = (SearchResult.from_dict(r) for r in res['list']['item'])
-        return {"items": items, "start": res['list']['start'],
-                "q": res['list']['q'], "end": res['list']['end'],
-                "total": res['list']['total'], "sr": res['list']['sr'],
-                "sort": res['list']['sort'], "group": res['list']['group']}
+        return {"items": items,
+                "start": res['list']['start'],
+                "q": res['list']['q'],
+                "end": res['list']['end'],
+                "total": res['list']['total'],
+                "sr": res['list']['sr'],
+                "sort": res['list']['sort'],
+                "group": res['list']['group']}
 
     def search_nutrient_report():
         pass
 
-    def search_list():
-        pass
+    def search_list(self, **kwargs):
+        """
+        Searches the database for lists
+
+        Optional arguments include:
+        - lt: list type, f = food, n = all nutirents, ns = specialty nutirents,
+            nr = standard release nutrients only, g = food group, defualt is f
+        - max: maximum number of items to return, default is 50
+        - offset: beginning item in the result set, default is 50
+        - sort: sort order, n = name or id, default is n
+
+        Returns a dict with the following keys:
+        - type: type of list requested
+        - start: beggining of offset
+        - end: ending offset
+        - total: number of items in the list
+        - sort: sort order of the list
+        - sr: Standard Release version
+        - items: a list of ListResult objects
+        """
+        kwargs['api_key'] = self._key
+        res = requests.get(self._base_url.format("list"), params=kwargs).json()
+        items = [ListResult.from_dict(d) for d in res['list']['item']]
+        return {"type": res['list']['lt'],
+                "start": res['list']['start'],
+                "end": res['list']['start'],
+                "total": res['list']['start'],
+                "sort": res['list']['sort'],
+                "sr": res['list']['sr'],
+                "items": items}
 
     def food_report(self, ndbno, **kwargs):
         """
@@ -85,8 +117,10 @@ class NDB(object):
         res = requests.get(self._base_url.format("reports"),
                            params=kwargs).json()
         food = FoodReport.from_dict(res['report']['food'])
-        return {"sr": res['report']['sr'], "type": res['report']['type'],
-                "footnotes": res['report']['footnotes'], "food": food}
+        return {"sr": res['report']['sr'],
+                "type": res['report']['type'],
+                "footnotes": res['report']['footnotes'],
+                "food": food}
 
 
 class SearchResult(object):
@@ -130,6 +164,33 @@ class SearchResult(object):
 
     def __repr__(self):
         return "Result(name={}, ndbno={}".format(self._name, self._ndbno)
+
+
+class ListResult(object):
+    @staticmethod
+    def from_dict(d):
+        return ListResult(id_=d['id'], name=d['name'], offset=d['offset'])
+
+    def __init__(self, id_="", name="", offset=""):
+        self._id = id_
+        self._name = name
+        self._offset = offset
+
+    def get_id(self):
+        return self._id
+
+    def get_name(self):
+        return self._name
+
+    def get_offset(self):
+        return self._offset
+
+    def __str__(self):
+        return "ListResult for {}".format(self._name)
+
+    def __repr__(self):
+        return "id={}, name={}, offset={}".format(
+            self._id, self._name, self._offset)
 
 
 class FoodReport(object):
@@ -217,7 +278,7 @@ class Nutrient(object):
     def get_se(self):
         return self._se
 
-    def measures(self):
+    def get_measures(self):
         return self._measures
 
     def __str__(self):
